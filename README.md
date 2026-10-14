@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-2f54e0"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-5645d4"></a>
   <img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3776ab">
   <img alt="Docker" src="https://img.shields.io/badge/docker-ready-2496ed">
   <img alt="Gmail and Google Workspace" src="https://img.shields.io/badge/Gmail-Workspace-ea4335">
@@ -243,6 +243,8 @@ warden/
 ## Contributing
 
 Issues and pull requests are welcome. Run the demo (`DEMO_MODE=true`) to work on the UI without any credentials.
+
+The UI follows [DESIGN.md](DESIGN.md), a Notion-style design system from [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) (MIT). New screens should use its tokens and components; see [CLAUDE.md](CLAUDE.md).
 
 ## License
 

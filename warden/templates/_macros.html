@@ -1,13 +1,24 @@
 {% macro label(path, new=False) -%}
-<span class="label{{ ' new' if new }}" style="--dot: {{ path | dot }}">{{ path }}</span>
+<span class="tag {{ path | tone }}{{ ' new' if new }}" title="{{ path }}{{ ' (new label)' if new }}">{{ path }}</span>
 {%- endmacro %}
 
 {% macro action(a) -%}
-{% if a == 'attention' %}<span class="pill red">Needs you</span>
-{% elif a == 'keep' %}<span class="pill blue">Kept in inbox</span>
-{% elif a == 'archive' %}<span class="pill grey">Archived</span>
-{% elif a == 'archive_unread' %}<span class="pill grey">Archived, unread</span>
-{% else %}<span class="pill grey">Labeled</span>{% endif %}
+{% if a == 'attention' %}<span class="badge t-pink">Needs you</span>
+{% elif a == 'keep' %}<span class="badge t-blue">Kept in inbox</span>
+{% elif a == 'archive' %}<span class="badge t-gray">Archived</span>
+{% elif a == 'archive_unread' %}<span class="badge t-brown">Archived, unread</span>
+{% else %}<span class="badge t-purple">Labeled</span>{% endif %}
+{%- endmacro %}
+
+{% macro run_status(r) -%}
+{% if r.status == 'failed' %}<span class="badge t-pink">Failed</span>
+{% elif r.status == 'running' %}<span class="badge t-yellow">Running</span>
+{% elif r.dry_run %}<span class="badge t-orange">Preview</span>
+{% else %}<span class="badge t-green">Done</span>{% endif %}
 {%- endmacro %}
 
 {% macro sender(s) -%}{{ s.split('<')[0].strip().strip('"') or s }}{%- endmacro %}
+
+{% macro head(title, sub="") -%}
+<div class="head"><div><h1>{{ title }}</h1>{% if sub %}<p>{{ sub }}</p>{% endif %}</div>{{ caller() if caller }}</div>
+{%- endmacro %}

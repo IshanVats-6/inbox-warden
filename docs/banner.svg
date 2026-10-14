@@ -1,50 +1,50 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" font-family="'IBM Plex Sans', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0f1115"/><stop offset="0.55" stop-color="#141b33"/><stop offset="1" stop-color="#1c2442"/>
+      <stop offset="0" stop-color="#0a1530"/><stop offset="0.55" stop-color="#0a1530"/><stop offset="1" stop-color="#1a2a52"/>
     </linearGradient>
-    <linearGradient id="logo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f54e0"/><stop offset="1" stop-color="#2f54e0"/></linearGradient>
+    <linearGradient id="logo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a1a1a"/><stop offset="1" stop-color="#1a1a1a"/></linearGradient>
     <filter id="sh" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000" flood-opacity="0.35"/></filter>
   </defs>
   <rect width="1280" height="420" rx="24" fill="url(#bg)"/>
-  <circle cx="1130" cy="40" r="180" fill="#2f54e0" opacity="0.22"/>
+  <circle cx="1130" cy="40" r="180" fill="#5645d4" opacity="0.35"/>
   <circle cx="960" cy="420" r="160" fill="#22c55e" opacity="0.08"/>
 
   <g transform="translate(80 92)">
     <rect width="72" height="72" rx="18" fill="url(#logo)"/>
     <path d="M18 26a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v22a4 4 0 0 1-4 4H22a4 4 0 0 1-4-4z" fill="none" stroke="#fff" stroke-width="4"/>
     <path d="M19 25l17 12 17-12" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
-    <circle cx="53" cy="51" r="10" fill="#fff" stroke="#2f54e0" stroke-width="3"/>
-    <path d="M48.5 51l3 3 5.5-6.5" fill="none" stroke="#2f54e0" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="53" cy="51" r="10" fill="#5645d4" stroke="#1a1a1a" stroke-width="3"/>
+    <path d="M48.5 51l3 3 5.5-6.5" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
-  <text x="80" y="226" fill="#ffffff" font-size="64" font-weight="600" letter-spacing="-1.5">Inbox Warden</text>
-  <text x="80" y="276" fill="#c4c9d2" font-size="25" font-weight="500">An AI agent that labels and cleans every Gmail inbox,</text>
-  <text x="80" y="310" fill="#c4c9d2" font-size="25" font-weight="500">with labels it invents for each company.</text>
-  <g font-size="15" font-weight="600" fill="#e7e9ee">
+  <text x="80" y="226" fill="#ffffff" font-size="64" font-weight="600" letter-spacing="-2">Inbox Warden</text>
+  <text x="80" y="276" fill="#a4a097" font-size="25" font-weight="500">An AI agent that labels and cleans every Gmail inbox,</text>
+  <text x="80" y="310" fill="#a4a097" font-size="25" font-weight="500">with labels it invents for each company.</text>
+  <g font-size="15" font-weight="600" fill="#ffffff">
     <text x="80" y="362">Self-hosted  ·  Gmail &amp; Google Workspace  ·  Powered by Claude  ·  MIT</text>
   </g>
 
   <g transform="translate(800 70)" filter="url(#sh)">
-    <rect width="400" height="280" rx="18" fill="#ffffff"/>
-    <text x="24" y="40" fill="#15181e" font-size="16" font-weight="700">Inbox</text>
+    <rect width="400" height="280" rx="12" fill="#ffffff"/>
+    <text x="24" y="40" fill="#1a1a1a" font-size="16" font-weight="700">Inbox</text>
     <g font-size="13">
       <g transform="translate(24 62)">
-        <rect width="352" height="46" rx="8" fill="#f6f7f9"/>
-        <text x="14" y="20" fill="#15181e" font-weight="600">Can you send the revised SOW?</text>
-        <text x="14" y="36" fill="#68707d">Lena Ortiz · Initech</text>
-        <rect x="252" y="23" width="90" height="20" rx="6" fill="#fdeceb"/><text x="265" y="37" fill="#c0392b" font-weight="600" font-size="12">Needs you</text>
+        <rect width="352" height="46" rx="8" fill="#f6f5f4"/>
+        <text x="14" y="20" fill="#1a1a1a" font-weight="600">Can you send the revised SOW?</text>
+        <text x="14" y="36" fill="#787671">Lena Ortiz · Initech</text>
+        <rect x="252" y="23" width="90" height="20" rx="6" fill="#fde0ec"/><text x="265" y="37" fill="#a02e6d" font-weight="600" font-size="12">Needs you</text>
       </g>
       <g transform="translate(24 118)">
-        <rect width="352" height="46" rx="8" fill="#f6f7f9"/>
-        <text x="14" y="20" fill="#15181e" font-weight="600">Homepage v3 feedback</text>
-        <text x="14" y="36" fill="#68707d">Priya Raman · Acme Corp</text>
-        <rect x="190" y="23" width="152" height="20" rx="6" fill="#eaefff"/><circle cx="202" cy="33" r="3.5" fill="#10b981"/><text x="210" y="37" fill="#2f54e0" font-weight="600" font-size="12">Clients/Acme Corp</text>
+        <rect width="352" height="46" rx="8" fill="#f6f5f4"/>
+        <text x="14" y="20" fill="#1a1a1a" font-weight="600">Homepage v3 feedback</text>
+        <text x="14" y="36" fill="#787671">Priya Raman · Acme Corp</text>
+        <rect x="190" y="23" width="152" height="20" rx="6" fill="#ffe8d4"/><circle cx="202" cy="33" r="0" fill="#ffe8d4"/><text x="204" y="37" fill="#793400" font-weight="600" font-size="12">Clients/Acme Corp</text>
       </g>
       <g transform="translate(24 174)">
-        <rect width="352" height="46" rx="8" fill="#f6f7f9"/>
-        <text x="14" y="20" fill="#15181e" font-weight="600">Interested in a website rebuild</text>
-        <text x="14" y="36" fill="#68707d">Daniel Kim · Brightline</text>
-        <rect x="204" y="23" width="138" height="20" rx="6" fill="#eaefff"/><circle cx="216" cy="33" r="3.5" fill="#64748b"/><text x="224" y="37" fill="#2f54e0" font-weight="600" font-size="12">Leads/Brightline</text>
+        <rect width="352" height="46" rx="8" fill="#f6f5f4"/>
+        <text x="14" y="20" fill="#1a1a1a" font-weight="600">Interested in a website rebuild</text>
+        <text x="14" y="36" fill="#787671">Daniel Kim · Brightline</text>
+        <rect x="204" y="23" width="138" height="20" rx="6" fill="#d9f3e1"/><circle cx="216" cy="33" r="0" fill="#d9f3e1"/><text x="218" y="37" fill="#1c6b31" font-weight="600" font-size="12">Leads/Brightline</text>
       </g>
       <g transform="translate(24 230)">
         <text x="14" y="16" fill="#9ca3af" font-size="12">+ 15 newsletters, alerts and promos archived</text>

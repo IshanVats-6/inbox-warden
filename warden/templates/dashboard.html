@@ -1,31 +1,95 @@
 {% extends "base.html" %}
-{% from "_macros.html" import label, action, sender %}
+{% from "_macros.html" import label, action, sender, run_status, head %}
 {% block heading %}Dashboard{% endblock %}
 {% block body %}
+{% set waiting = attention | length %}
+{{ head("Dashboard", ("%d email%s need%s you" % (waiting, '' if waiting == 1 else 's', 's' if waiting == 1 else '') if waiting else "Nothing is waiting on you")
+   ~ " · next run " ~ next_run) }}
+
 {% if not mailboxes %}
-<div class="notice">No mailboxes yet. <a href="/mailboxes">Connect your first mailbox</a>, describe your company in <a href="/settings">Settings</a>, then run a preview.</div>
+<div class="banner"><div><b>Connect your first mailbox</b><p>Then describe your company in Settings and run a preview to see how mail will be sorted.</p></div>
+  <a class="btn dark" href="/mailboxes">Connect a mailbox</a></div>
+{% elif dry_run %}
+<div class="banner"><div><b>Preview mode is on</b><p>Runs show what would happen without changing Gmail. Turn on live mode once the previews look right.</p></div>
+  <a class="btn dark" href="/settings#automation">Review and go live</a></div>
 {% endif %}
-<div class="cards">
-  <div class="card"><div class="k">Emails sorted</div><div class="v">{{ totals.n or 0 }}</div><div class="s">across {{ mailboxes }} mailbox{{ 'es' if mailboxes != 1 }}</div></div>
-  <div class="card"><div class="k">Archived</div><div class="v">{{ totals.archived or 0 }}</div><div class="s">out of the inbox, nothing deleted</div></div>
-  <div class="card"><div class="k">Labels</div><div class="v">{{ labels.n }}</div><div class="s">{{ labels.agent or 0 }} created by the agent</div></div>
-  <div class="card"><div class="k">Next run</div><div class="v" style="font-size:18px;margin-top:9px">{{ next_run }}</div><div class="s">{% if last %}last: {{ last.started_at | when }} · {{ last.status }}{% else %}never run{% endif %}</div></div>
-</div>
-<div class="grid2">
-  <div class="panel">
-    <h2>Needs you <span class="pill red">{{ attention | length }}</span></h2>
-    {% for d in attention %}
-    <div class="item"><div class="grow"><div class="subj">{{ d.subject or "(no subject)" }}</div>
-      <div class="from">{{ sender(d.sender) }} · {{ d.mailbox }}</div></div>{{ label(d.label) }}</div>
-    {% else %}<div class="empty">Nothing is waiting on you.</div>{% endfor %}
+
+<section class="stats" aria-label="Totals">
+  <div class="stat"><div class="k">Emails sorted</div><div class="v">{{ totals.n or 0 }}</div><div class="s">across {{ mailboxes }} mailbox{{ 'es' if mailboxes != 1 }}</div></div>
+  <div class="stat"><div class="k">Archived</div><div class="v">{{ totals.archived or 0 }}</div><div class="s">out of the inbox, nothing deleted</div></div>
+  <div class="stat{{ ' alert' if waiting }}"><div class="k">Need you</div><div class="v">{{ totals.attention or 0 }}</div><div class="s">flagged across all runs</div></div>
+  <div class="stat"><div class="k">Labels</div><div class="v">{{ labels.n }}</div><div class="s">{{ labels.agent or 0 }} created by the agent</div></div>
+</section>
+
+<div class="cols">
+  <div>
+    <section class="card">
+      <div class="card-head"><h2>Needs you {% if waiting %}<span class="badge round t-pink">{{ waiting }}</span>{% endif %}</h2>
+        <a class="link" href="/activity">Open activity</a></div>
+      {% if attention %}
+      <ul class="rows">
+        {% for d in attention %}
+        <li><div class="grow"><div class="t">{{ d.subject or "(no subject)" }}</div><div class="m">{{ sender(d.sender) }} · {{ d.mailbox }}</div></div>
+          <div class="end">{{ label(d.label) }}</div></li>
+        {% endfor %}
+      </ul>
+      {% else %}<div class="empty">{% include "icons/check.svg" %}Nothing is waiting on you.</div>{% endif %}
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Latest decisions</h2><a class="link" href="/activity">View all</a></div>
+      {% if recent %}
+      <table class="fixed resp">
+        <colgroup><col><col style="width:190px"><col style="width:150px"></colgroup>
+        <thead><tr><th scope="col">Email</th><th scope="col">Label</th><th scope="col">Action</th></tr></thead>
+        <tbody>
+        {% for d in recent %}
+        <tr><td><span class="clip" style="font-weight:500">{{ d.subject or "(no subject)" }}</span><span class="clip sub">{{ sender(d.sender) }}</span></td>
+          <td>{{ label(d.label, d.new_label) }}</td><td>{{ action(d.action) }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<div class="empty">No runs yet. Use <b>Preview run</b> to see what the agent would do.</div>{% endif %}
+    </section>
   </div>
-  <div class="panel">
-    <h2>Latest decisions <a class="small" href="/activity">View all</a></h2>
-    {% for d in recent %}
-    <div class="item"><div class="grow"><div class="subj">{{ d.subject or "(no subject)" }}</div>
-      <div class="from">{{ sender(d.sender) }}</div></div>
-      <div style="text-align:right">{{ label(d.label, d.new_label) }}<div style="margin-top:4px">{{ action(d.action) }}</div></div></div>
-    {% else %}<div class="empty">No runs yet.</div>{% endfor %}
-  </div>
+
+  <aside>
+    <section class="card">
+      <div class="card-head"><h2>Next run</h2>{% if dry_run %}<span class="badge t-orange">Preview</span>{% else %}<span class="badge t-green"><span class="dot"></span>Live</span>{% endif %}</div>
+      <div class="card-body">
+        <div class="big">{{ next_run }}</div>
+        <dl class="kv" style="margin-top:14px">
+          <dt>Last run</dt><dd>{% if last %}{{ last.started_at | when }}{% else %}Never{% endif %}</dd>
+          {% if last %}<dt>Result</dt><dd>{{ run_status(last) }}</dd>
+          <dt>Sorted</dt><dd>{{ last_stats.sorted or 0 }} emails</dd>{% endif %}
+        </dl>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Mailboxes</h2><a class="link" href="/mailboxes">Manage</a></div>
+      {% if boxes %}
+      <ul class="rows">
+        {% for b in boxes %}
+        <li><div class="grow"><a class="t clip" style="color:var(--ink)" href="/activity?mailbox={{ b.email | urlencode }}">{{ b.email }}</a></div>
+          <div class="end">{% if b.mode == 'paused' %}<span class="badge t-gray">Paused</span>{% elif b.mode == 'label_only' %}<span class="badge t-blue">Label only</span>{% else %}<span class="badge t-green">Clean</span>{% endif %}</div></li>
+        {% endfor %}
+      </ul>
+      {% else %}<div class="empty">No mailboxes yet.</div>{% endif %}
+    </section>
+
+    {% if top_labels %}
+    {% set peak = top_labels[0].emails %}
+    <section class="card">
+      <div class="card-head"><h2>Busiest labels</h2><a class="link" href="/labels">All labels</a></div>
+      <ul class="rows">
+        {% for l in top_labels %}
+        <li><div class="grow"><div class="inline" style="justify-content:space-between">{{ label(l.path) }}<span class="sub" style="font-feature-settings:'tnum'">{{ l.emails }}</span></div>
+          <div class="meter" aria-hidden="true"><i style="width:{{ (l.emails / peak * 100) | round | int }}%"></i></div></div></li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </aside>
 </div>
 {% endblock %}

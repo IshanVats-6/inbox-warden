@@ -1,42 +1,50 @@
 {% extends "base.html" %}
-{% from "_macros.html" import label %}
+{% from "_macros.html" import label, head %}
 {% block heading %}Labels{% endblock %}
-{% macro row(l) -%}
-<div class="row">
-  <div>{{ label(l.path) }}
-    {% if l.origin == 'core' %}<span class="pill grey">core</span>{% elif l.origin == 'agent' %}<span class="pill blue">agent</span>{% endif %}
-    <span class="small muted">{{ l.emails }} email{{ "s" if l.emails != 1 }}{% if l.description %} · {{ l.description }}{% endif %}</span></div>
-  <form class="inline" method="post" action="/labels/{{ l.path }}/disposition">
-    <select name="disposition" onchange="this.form.submit()">
+{% macro row(l, child=False) -%}
+<tr class="{{ 'child' if child else 'group' }}">
+  <td>{{ label(l.path) }}{% if l.description %}<span class="clip sub" style="margin-top:4px">{{ l.description }}</span>{% endif %}</td>
+  <td>{% if l.origin == 'core' %}<span class="badge t-gray">Core</span>{% elif l.origin == 'agent' %}<span class="badge t-purple">Agent</span>{% else %}<span class="badge t-blue">You</span>{% endif %}</td>
+  <td class="num" style="font-feature-settings:'tnum'">{{ l.emails }}</td>
+  <td><form class="compact" method="post" action="/labels/{{ l.path }}/disposition">
+    <select name="disposition" aria-label="Action for {{ l.path }}" onchange="this.form.submit()">
       <option value="inbox" {{ 'selected' if l.disposition == 'inbox' }}>Keep in inbox</option>
       <option value="archive" {{ 'selected' if l.disposition == 'archive' }}>Archive + read</option>
       <option value="archive_unread" {{ 'selected' if l.disposition == 'archive_unread' }}>Archive, unread</option>
-    </select>
-  </form>
-</div>
+    </select></form></td>
+</tr>
 {%- endmacro %}
 {% block body %}
-<div class="notice">Labels are created in Gmail only when the first email is filed under them. The agent adds new labels and sub-labels as it learns your business; you decide what each one does.</div>
-<div class="split">
-  <div class="panel"><h2>Add a label</h2><div class="body">
-    <form method="post" action="/labels-new">
-      <div class="field"><label>Name</label><input type="text" name="path" placeholder="Clients/Acme Corp" required>
-        <div class="hint">Use "Group/Item" for a sub-label.</div></div>
-      <div class="field"><label>Description</label><input type="text" name="description" placeholder="What belongs here"></div>
-      <div class="field"><label>Action</label><select name="disposition">
-        <option value="inbox">Keep in inbox</option><option value="archive" selected>Archive + mark read</option>
-        <option value="archive_unread">Archive, keep unread</option></select></div>
-      <button class="btn">Add label</button>
-    </form>
-  </div></div>
-  <div class="panel"><h2>Taxonomy <span class="small muted">{{ groups | length }} groups</span></h2>
-    {% for top, items in groups.items() %}
-    <div class="group">
-      {% for l in items if '/' not in l.path %}{{ row(l) }}{% endfor %}
-      {% set kids = items | selectattr('path', 'search', '/') | list %}
-      {% if kids %}<div class="children">{% for l in kids %}{{ row(l) }}{% endfor %}</div>{% endif %}
-    </div>
-    {% endfor %}
-  </div>
+{{ head("Labels", "The agent files every email under one label and adds new ones as it learns your business. You decide what each label does.") }}
+<div class="cols">
+  <section class="card">
+    <div class="card-head"><h2>Taxonomy</h2><span class="sub">{{ groups | length }} groups</span></div>
+    <table class="tree fixed resp">
+      <colgroup><col><col style="width:96px"><col style="width:80px"><col style="width:200px"></colgroup>
+      <thead><tr><th scope="col">Label</th><th scope="col">Added by</th><th scope="col">Emails</th><th scope="col">Action</th></tr></thead>
+      <tbody>
+      {% for top, items in groups.items() %}
+        {% for l in items if '/' not in l.path %}{{ row(l) }}{% endfor %}
+        {% for l in items if '/' in l.path %}{{ row(l, True) }}{% endfor %}
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <aside class="sticky">
+    <section class="card">
+      <div class="card-head"><h2>Add a label</h2></div>
+      <form class="card-body" method="post" action="/labels-new">
+        <div class="field"><label class="lbl" for="path">Name</label><input id="path" type="text" name="path" placeholder="Clients/Acme Corp" required>
+          <div class="help">Use Group/Item for a sub-label.</div></div>
+        <div class="field"><label class="lbl" for="desc">Description</label><input id="desc" type="text" name="description" placeholder="What belongs here"></div>
+        <div class="field"><label class="lbl" for="disp">Action</label><select id="disp" name="disposition">
+          <option value="inbox">Keep in inbox</option><option value="archive" selected>Archive + mark read</option>
+          <option value="archive_unread">Archive, keep unread</option></select></div>
+        <button class="btn w100">Add label</button>
+      </form>
+    </section>
+    <div class="tint cream" style="margin-top:16px"><h3>How labels appear in Gmail</h3>
+      <p>A label is created in Gmail only when the first email is filed under it, so unused ideas never clutter your sidebar.</p></div>
+  </aside>
 </div>
 {% endblock %}

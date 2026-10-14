@@ -81,8 +81,10 @@ def page(request, name, **ctx):
     if not authed(request):
         return RedirectResponse("/login", status_code=303)
     company = db.get("company", agent.default_company())
+    last = (db.rows("SELECT started_at, status FROM runs ORDER BY started_at DESC LIMIT 1") or [None])[0]
     return templates.TemplateResponse(request, name, {"active": name.split(".")[0], "company": company, "mailbox": "",
                                                       "side_boxes": side_boxes(), "dry_run": agent.is_dry_run(),
+                                                      "next_run_short": next_run().strftime("%a %H:%M"), "last_run": last,
                                                       "demo": settings.demo_mode, **ctx})
 
 
@@ -99,16 +101,17 @@ def fmt_time(ts):
     return datetime.fromtimestamp(ts, ZoneInfo(settings.timezone)).strftime("%d %b, %H:%M") if ts else ""
 
 
-PALETTE = ["#2f54e0", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#ec4899", "#8b5cf6", "#14b8a6", "#f97316", "#64748b"]
+# Notion property colours from DESIGN.md (tint background + deep text); a label group keeps one colour.
+TONES = ["t-blue", "t-green", "t-orange", "t-purple", "t-pink", "t-brown", "t-yellow", "t-gray"]
 
 
-def dot(path):
+def tone(path):
     top = path.split("/")[0]
-    return PALETTE[sum(map(ord, top)) % len(PALETTE)]
+    return TONES[sum(map(ord, top)) % len(TONES)]
 
 
 templates.env.filters["when"] = fmt_time
-templates.env.filters["dot"] = dot
+templates.env.filters["tone"] = tone
 templates.env.tests["search"] = lambda value, needle: needle in value
 
 
@@ -137,13 +140,15 @@ def logout(request: Request):
 
 @app.get("/", response_class=HTMLResponse)
 def dashboard(request: Request):
-    runs = db.rows("SELECT * FROM runs ORDER BY id DESC LIMIT 1")
+    runs = db.rows("SELECT * FROM runs ORDER BY started_at DESC LIMIT 1")
     last = runs[0] if runs else None
     totals = db.rows("SELECT COUNT(*) n, SUM(action IN ('archive','archive_unread')) archived, "
                      "SUM(action='attention') attention FROM decisions d JOIN runs r ON r.id=d.run_id WHERE r.dry_run=0")[0]
     attention = db.rows("SELECT * FROM decisions WHERE action='attention' ORDER BY at DESC LIMIT 6")
     recent = db.rows("SELECT * FROM decisions ORDER BY at DESC LIMIT 8")
+    top_labels = db.rows("SELECT path, emails FROM labels WHERE emails > 0 ORDER BY emails DESC, path LIMIT 6")
     return page(request, "dashboard.html", last=last, last_stats=json.loads(last["stats"]) if last else {},
+                top_labels=top_labels, boxes=db.rows("SELECT email, mode FROM mailboxes ORDER BY email"),
                 totals=totals, attention=attention, recent=recent,
                 mailboxes=db.rows("SELECT COUNT(*) n FROM mailboxes")[0]["n"],
                 labels=db.rows("SELECT COUNT(*) n, SUM(origin='agent') agent FROM labels")[0],

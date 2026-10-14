@@ -13,7 +13,7 @@ die() { printf '\033[31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
 # read from the terminal even when this script is piped into bash
 ask() { local prompt="$1" default="${2:-}" reply; read -r -p "  $prompt${default:+ [$default]}: " reply </dev/tty; echo "${reply:-$default}"; }
 ask_secret() { local reply; read -r -s -p "  $1: " reply </dev/tty; echo >&2; echo "$reply"; }
-rand() { LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c "$1"; }
+rand() { (LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c "$1") || true; }  # head closes the pipe early; ignore SIGPIPE
 port_free() { ! (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null; }
 
 echo

@@ -2,10 +2,11 @@
 {% from "_macros.html" import label, action, sender %}
 {% block heading %}Activity{% endblock %}
 {% block body %}
+{% if mailbox %}<div class="chips"><a class="chip" href="/activity?run={{ selected }}">All mailboxes</a><span class="chip on">{{ mailbox }}</span></div>{% endif %}
 <div class="split">
   <div class="panel runs"><h2>Runs</h2>
     {% for r in runs %}
-    <a href="/activity?run={{ r.id }}" class="{{ 'on' if r.id == selected }}">
+    <a href="/activity?run={{ r.id }}{{ '&mailbox=' ~ (mailbox | urlencode) if mailbox }}" class="{{ 'on' if r.id == selected }}">
       <span>{{ r.started_at | when }}<div class="small muted">{{ r.trigger }}{{ ' · preview' if r.dry_run }}</div></span>
       <span style="text-align:right">{% if r.status == 'failed' %}<span class="pill red">failed</span>{% elif r.status == 'running' %}<span class="pill warn">running</span>{% else %}<b>{{ r.stats.sorted or 0 }}</b> <span class="small muted">sorted</span>{% endif %}</span>
     </a>
@@ -15,20 +16,22 @@
     {% set r = (runs | selectattr('id', 'equalto', selected) | first) if runs else None %}
     <h2>Decisions{% if r %}
       <span class="stat-line"><span><b>{{ r.stats.sorted or 0 }}</b> sorted</span><span><b>{{ (r.stats.archive or 0) + (r.stats.archive_unread or 0) }}</b> archived</span>
-      <span><b>{{ r.stats.labels_created or 0 }}</b> new labels</span><span><b>{{ r.stats.attention or 0 }}</b> need you</span></span>{% endif %}</h2>
+      <span><b>{{ r.stats.labels_created or 0 }}</b> new labels</span><span><b>{{ r.stats.attention or 0 }}</b> need you</span>{% if mailbox %}<span><b>{{ shown }}</b> in this mailbox</span>{% endif %}</span>{% endif %}</h2>
     {% if r and r.error %}<div class="notice red" style="margin:14px 18px">{{ r.error }}</div>{% endif %}
     {% if r and r.stats.batch_errors %}<div class="notice red" style="margin:14px 18px">{{ r.stats.batch_errors }} batch(es) failed and were left for the next run: {{ r.stats.last_error }}</div>{% endif %}
     {% if r and r.dry_run %}<div class="notice" style="margin:14px 18px 0">Preview: nothing was changed in Gmail.</div>{% endif %}
-    <table>
+    {% if shown > decisions | length %}<div class="notice" style="margin:14px 18px 0">Showing the first {{ decisions | length }} of {{ shown }}: anything that needs you or stayed in the inbox comes first.</div>{% endif %}
+    <table class="fixed">
+      <colgroup><col><col style="width:220px"><col style="width:160px"></colgroup>
       <tr><th>Email</th><th>Label</th><th>Action</th></tr>
       {% for d in decisions %}
       <tr>
-        <td><a href="{{ link(d.mailbox, d.thread_id) }}" target="_blank" rel="noopener" style="color:inherit"><b>{{ d.subject or "(no subject)" }}</b></a>
-          <div class="small muted">{{ sender(d.sender) }} · {{ d.mailbox }}</div><div class="small muted">{{ d.reason }}</div></td>
-        <td>{{ label(d.label, d.new_label) }}{% if d.new_label %}<div class="small" style="color:var(--brand);margin-top:3px">new label</div>{% endif %}</td>
+        <td><a href="{{ link(d.mailbox, d.thread_id) }}" target="_blank" rel="noopener" style="color:inherit"><b class="clip" style="font-weight:500">{{ d.subject or "(no subject)" }}</b></a>
+          <div class="small muted clip">{{ sender(d.sender) }}{{ ' · ' ~ d.mailbox if not mailbox }}</div><div class="small muted">{{ d.reason }}</div></td>
+        <td>{{ label(d.label, d.new_label) }}{% if d.new_label %}<div class="small" style="color:var(--accent);margin-top:3px">new label</div>{% endif %}</td>
         <td>{{ action(d.action) }}</td>
       </tr>
-      {% else %}<tr><td colspan="3" class="empty">Nothing in this run.</td></tr>{% endfor %}
+      {% else %}<tr><td colspan="3" class="empty">Nothing in this run{{ ' for ' ~ mailbox if mailbox }}.</td></tr>{% endfor %}
     </table>
   </div>
 </div>

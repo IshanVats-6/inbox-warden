@@ -3,23 +3,44 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Inbox Warden{% endblock %}</title>
-  <link rel="icon" href="/static/logo.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css">
+  <title>{% block title %}{{ self.heading() }} · Inbox Warden{% endblock %}</title>
+  <link rel="icon" href="/static/logo.svg?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=2">
 </head>
 <body>
+{% macro box(email, on=False, paused=False) -%}
+{% set local, domain = email.split('@', 1) %}
+<a class="box{{ ' on' if on }}" href="/activity?mailbox={{ email | urlencode }}" title="{{ email }}{{ ' (paused)' if paused }}">
+  <span class="name">{{ local }}<em>@{{ domain }}</em></span>{% if paused %}<span class="mark" title="Paused">{% include "icons/pause.svg" %}</span>{% endif %}</a>
+{%- endmacro %}
 <div class="shell">
   <aside class="side">
-    <a class="brand" href="/"><img src="/static/logo.svg" alt=""><span>Inbox Warden</span></a>
+    <a class="brand" href="/"><img src="/static/logo.svg?v=2" alt=""><span>Inbox Warden</span></a>
     <nav>
       <a href="/" class="{{ 'on' if active == 'dashboard' }}">{% include "icons/home.svg" %}Dashboard</a>
-      <a href="/mailboxes" class="{{ 'on' if active == 'mailboxes' }}">{% include "icons/inbox.svg" %}Mailboxes</a>
+      <a href="/activity" class="{{ 'on' if active == 'activity' and not mailbox }}">{% include "icons/pulse.svg" %}Activity</a>
       <a href="/labels" class="{{ 'on' if active == 'labels' }}">{% include "icons/tag.svg" %}Labels</a>
-      <a href="/activity" class="{{ 'on' if active == 'activity' }}">{% include "icons/pulse.svg" %}Activity</a>
+      <a href="/mailboxes" class="{{ 'on' if active == 'mailboxes' }}">{% include "icons/inbox.svg" %}Mailboxes<span class="count">{{ side_boxes.total or '' }}</span></a>
       <a href="/settings" class="{{ 'on' if active == 'settings' }}">{% include "icons/gear.svg" %}Settings</a>
     </nav>
+    {% if side_boxes.total %}
+    <div class="boxes">
+      <div class="sec">Mailboxes</div>
+      {% if side_boxes.folded %}
+        {% for domain, boxes in side_boxes.domains %}
+        {% set inside = boxes | selectattr('email', 'equalto', mailbox) | list %}
+        <details class="fold"{{ ' open' if inside }}>
+          <summary class="box head">{% include "icons/chev.svg" %}<span class="name">{{ domain }}</span><span class="count">{{ boxes | length }}</span></summary>
+          <div class="folded">{% for b in boxes %}{{ box(b.email, b.email == mailbox, b.mode == 'paused') }}{% endfor %}</div>
+        </details>
+        {% endfor %}
+      {% else %}
+        {% for domain, boxes in side_boxes.domains %}{% for b in boxes %}{{ box(b.email, b.email == mailbox, b.mode == 'paused') }}{% endfor %}{% endfor %}
+      {% endif %}
+    </div>
+    {% endif %}
     <div class="side-foot">
       <div class="company">{{ company.name or "Your company" }}</div>
       {% if not demo %}<a href="/logout">Log out</a>{% else %}<span class="pill demo">Demo data</span>{% endif %}
@@ -31,11 +52,11 @@
       <div class="top-actions">
         {% if dry_run %}<span class="pill warn" title="Runs show what would happen without changing Gmail">Preview mode</span>
         {% else %}<span class="pill ok">Live</span>{% endif %}
-        <form method="post" action="/run"><input type="hidden" name="preview" value="1"><button class="btn ghost">Preview run</button></form>
-        <form method="post" action="/run"><button class="btn">Run now</button></form>
+        <form method="post" action="/run"><input type="hidden" name="preview" value="1"><button class="btn ghost">{% include "icons/eye.svg" %}Preview run</button></form>
+        <form method="post" action="/run"><button class="btn">{% include "icons/play.svg" %}Run now</button></form>
       </div>
     </header>
-    {% block body %}{% endblock %}
+    <div class="content">{% block body %}{% endblock %}</div>
   </main>
 </div>
 </body>

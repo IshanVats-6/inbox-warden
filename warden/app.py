@@ -81,15 +81,25 @@ def page(request, name, **ctx):
     if not authed(request):
         return RedirectResponse("/login", status_code=303)
     company = db.get("company", agent.default_company())
-    return templates.TemplateResponse(request, name, {"active": name.split(".")[0], "company": company,
-                                                      "dry_run": agent.is_dry_run(), "demo": settings.demo_mode, **ctx})
+    return templates.TemplateResponse(request, name, {"active": name.split(".")[0], "company": company, "mailbox": "",
+                                                      "side_boxes": side_boxes(), "dry_run": agent.is_dry_run(),
+                                                      "demo": settings.demo_mode, **ctx})
+
+
+def side_boxes():
+    """Sidebar mailbox list: grouped by domain, folded once there are more than four."""
+    boxes = db.rows("SELECT email, mode FROM mailboxes ORDER BY email")
+    domains = {}
+    for b in boxes:
+        domains.setdefault(b["email"].split("@", 1)[1], []).append(b)
+    return {"total": len(boxes), "folded": len(boxes) > 4, "domains": sorted(domains.items())}
 
 
 def fmt_time(ts):
     return datetime.fromtimestamp(ts, ZoneInfo(settings.timezone)).strftime("%d %b, %H:%M") if ts else ""
 
 
-PALETTE = ["#6366f1", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#ec4899", "#8b5cf6", "#14b8a6", "#f97316", "#64748b"]
+PALETTE = ["#2f54e0", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#ec4899", "#8b5cf6", "#14b8a6", "#f97316", "#64748b"]
 
 
 def dot(path):
@@ -190,13 +200,19 @@ def new_label(request: Request, path: str = Form(...), description: str = Form("
 
 
 @app.get("/activity", response_class=HTMLResponse)
-def activity(request: Request, run: int = 0):
-    runs = db.rows("SELECT * FROM runs ORDER BY id DESC LIMIT 30")
+def activity(request: Request, run: int = 0, mailbox: str = ""):
+    runs = db.rows("SELECT * FROM runs ORDER BY started_at DESC LIMIT 30")
     for r in runs:
         r["stats"] = json.loads(r["stats"])
     selected = run or (runs[0]["id"] if runs else 0)
-    decisions = db.rows("SELECT * FROM decisions WHERE run_id=? ORDER BY attention DESC, label", selected)
-    return page(request, "activity.html", runs=runs, selected=selected, decisions=decisions, link=backend().link)
+    where, args = "run_id=?", [selected]
+    if mailbox:
+        where, args = where + " AND mailbox=?", args + [mailbox]
+    shown = db.rows(f"SELECT COUNT(*) n FROM decisions WHERE {where}", *args)[0]["n"]
+    decisions = db.rows(f"SELECT * FROM decisions WHERE {where} "
+                        "ORDER BY attention DESC, action='keep' DESC, label LIMIT 300", *args)
+    return page(request, "activity.html", runs=runs, selected=selected, decisions=decisions, shown=shown,
+                mailbox=mailbox, link=backend().link)
 
 
 @app.get("/settings", response_class=HTMLResponse)

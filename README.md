@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-6366f1"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-2f54e0"></a>
   <img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3776ab">
   <img alt="Docker" src="https://img.shields.io/badge/docker-ready-2496ed">
   <img alt="Gmail and Google Workspace" src="https://img.shields.io/badge/Gmail-Workspace-ea4335">
@@ -156,7 +156,7 @@ payment, a contract to sign) is **starred and marked Important** and stays in th
 
 <table>
   <tr>
-    <td width="50%"><img alt="Activity" src="docs/screenshots/activity.png"><p align="center"><b>Activity</b>: every decision, with the reason</p></td>
+    <td width="50%"><img alt="Activity" src="docs/screenshots/activity.png"><p align="center"><b>Activity</b>: every decision, with the reason. Click a mailbox in the sidebar to see only its mail</p></td>
     <td width="50%"><img alt="Mailboxes" src="docs/screenshots/mailboxes.png"><p align="center"><b>Mailboxes</b>: connect, choose a mode per mailbox</p></td>
   </tr>
   <tr>

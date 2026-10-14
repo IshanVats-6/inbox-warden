@@ -9,7 +9,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 from cryptography.fernet import Fernet
 from google.auth.transport.requests import AuthorizedSession
-from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 
 from . import db
@@ -43,13 +42,9 @@ class Gmail:
         with self._lock:
             if email not in self._creds:
                 box = db.rows("SELECT * FROM mailboxes WHERE email=?", email)[0]
-                if box["auth"] == "service_account":
-                    self._creds[email] = service_account.Credentials.from_service_account_file(
-                        settings.google_service_account_file, scopes=SCOPES, subject=email)
-                else:
-                    self._creds[email] = Credentials(
-                        None, refresh_token=decrypt(box["refresh_token"]), token_uri="https://oauth2.googleapis.com/token",
-                        client_id=settings.google_client_id, client_secret=settings.google_client_secret, scopes=SCOPES)
+                self._creds[email] = Credentials(
+                    None, refresh_token=decrypt(box["refresh_token"]), token_uri="https://oauth2.googleapis.com/token",
+                    client_id=settings.google_client_id, client_secret=settings.google_client_secret, scopes=SCOPES)
             return self._creds[email]
 
     def call(self, email, method, path, **kw):

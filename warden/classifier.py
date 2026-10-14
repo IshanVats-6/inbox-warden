@@ -1,13 +1,17 @@
-"""Claude decides, per email, which label it belongs under, and may propose new labels for the company.
+"""Decide, per email, which label it belongs under, and propose new labels for the company.
 
+Jev (TypeSafe) handles the quick decisions into existing labels; Claude handles the rest and invents new labels.
 Code (agent.py / taxonomy.py) keeps the final say: label limits, name cleanup, dedupe and the actions.
 """
 
+import asyncio
 import json
+import os
 from typing import Literal
 
 import anthropic
 from pydantic import BaseModel, Field
+from typesafe_sdk import AsyncTypeSafeClient, Choice, Noul
 
 from .config import settings
 
@@ -79,6 +83,87 @@ class ClaudeClassifier:
         return response.parsed_output.decisions, response.usage
 
 
+BULK_LABELS = {"Notifications", "Newsletters", "Promotions"}
+
+
+class JevClassifier:
+    """First pass with Jev (TypeSafe): picks an EXISTING label per email and flags needs-attention.
+
+    Jev returns typed judgments with probabilities, so it is fast and cheap for the common case. It cannot invent
+    labels, so emails it is unsure about (or where nothing fits) are handed to Claude.
+    """
+
+    NONE = "__none__"
+
+    def __init__(self):
+        self.api_key = settings.typesafe_api_key
+
+    def classify(self, emails, labels, company):
+        criteria = {l["path"]: (l["description"] or f"Mail about {l['path']}") for l in labels}
+        criteria[self.NONE] = "None of these labels fits this email well."
+        questions = {
+            "label": Choice(instructions="Which label fits `email` best for the company in `company`? `email.mailing_list` "
+                                         "is true when it has a mailing-list header.", criteria=criteria),
+            "attention": Noul(instructions=(
+                "Is a person or process blocked until the company in `company` acts on `email`: a client or prospect "
+                "waiting on a reply, a failed payment, a contract to sign, an account about to be suspended? "
+                "Newsletters, marketing and routine notifications do not count.")),
+            "contact": Noul(instructions=(
+                "Is `email` personal correspondence from someone the company in `company` does or could do business "
+                "with (a client, prospect, partner, vendor contact, candidate, colleague), as opposed to automated, "
+                "bulk or marketing mail?")),
+        }
+
+        async def run():
+            sem = asyncio.Semaphore(16)
+            async with AsyncTypeSafeClient(api_key=self.api_key) as client:
+                async def one(e):
+                    state = {"company": company, "email": {"from": e["from"], "to": e["to"], "subject": e["subject"],
+                                                           "snippet": e["snippet"], "mailing_list": e["bulk"]}}
+                    async with sem:
+                        try:
+                            res = await client.system_one(state=state, questions=questions)
+                        except Exception:
+                            return e, None
+                    return e, res
+                return await asyncio.gather(*(one(e) for e in emails))
+
+        decided, unsure = [], []
+        for e, res in asyncio.run(run()):
+            choice = res.choices["label"] if res else None
+            if not choice or choice.choice == self.NONE or choice.confidence < settings.jev_min_confidence:
+                unsure.append(e)
+                continue
+            # Real business contacts deserve their own label (Clients/..., Leads/...), not a bulk bucket
+            if choice.choice in BULK_LABELS and res.nouls["contact"].noul >= 0.5:
+                unsure.append(e)
+                continue
+            decided.append(Decision(id=e["id"], label=choice.choice, is_new_label=False, new_label_description="",
+                                    new_label_disposition="archive", needs_attention=res.nouls["attention"].noul >= 0.7,
+                                    reason=f"Jev, {choice.confidence:.0%} confident"))
+        return decided, unsure
+
+
+class HybridClassifier:
+    """Jev for the quick, common decisions; Claude for the rest and for creating new labels."""
+
+    def __init__(self):
+        self.jev = JevClassifier() if settings.typesafe_api_key else None
+        self.claude = ClaudeClassifier() if os.environ.get("ANTHROPIC_API_KEY") else None
+        if not self.jev and not self.claude:
+            raise RuntimeError("Set ANTHROPIC_API_KEY and/or TYPESAFE_API_KEY.")
+
+    def classify(self, emails, labels, company):
+        if not self.jev:
+            return self.claude.classify(emails, labels, company)
+        decided, unsure = self.jev.classify(emails, labels, company)
+        usage = None
+        if unsure and self.claude:
+            more, usage = self.claude.classify(unsure, labels, company)
+            decided += more
+        return decided, usage
+
+
 class DemoClassifier:
     """Keyword rules standing in for Claude in DEMO_MODE, so the app can be tried with no API key."""
 
@@ -112,4 +197,4 @@ class DemoClassifier:
 
 
 def classifier():
-    return DemoClassifier() if settings.demo_mode else ClaudeClassifier()
+    return DemoClassifier() if settings.demo_mode else HybridClassifier()

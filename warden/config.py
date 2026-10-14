@@ -16,13 +16,15 @@ class Settings:
     secret_key: str = os.environ.get("SECRET_KEY", "")
     demo_mode: bool = _bool("DEMO_MODE", False)
 
-    # Google: an OAuth client (any Gmail / Workspace user signs in) and, optionally,
-    # a service account with domain-wide delegation (Workspace admins adding many mailboxes)
+    # Google OAuth client: mailboxes are connected with "Sign in with Google"
     google_client_id: str = os.environ.get("GOOGLE_CLIENT_ID", "")
     google_client_secret: str = os.environ.get("GOOGLE_CLIENT_SECRET", "")
-    google_service_account_file: str = os.environ.get("GOOGLE_SERVICE_ACCOUNT_FILE", "")
 
-    # Claude
+    # Jev (TypeSafe): fast first pass into existing labels
+    typesafe_api_key: str = os.environ.get("TYPESAFE_API_KEY", "")
+    jev_min_confidence: float = float(os.environ.get("JEV_MIN_CONFIDENCE", "0.6"))
+
+    # Claude: the rest, and new labels
     anthropic_model: str = os.environ.get("ANTHROPIC_MODEL", "claude-opus-5-5")
     anthropic_effort: str = os.environ.get("ANTHROPIC_EFFORT", "low")
     batch_size: int = int(os.environ.get("BATCH_SIZE", "25"))

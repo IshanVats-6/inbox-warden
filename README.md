@@ -7,7 +7,7 @@
   <img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3776ab">
   <img alt="Docker" src="https://img.shields.io/badge/docker-ready-2496ed">
   <img alt="Gmail and Google Workspace" src="https://img.shields.io/badge/Gmail-Workspace-ea4335">
-  <img alt="Powered by Claude" src="https://img.shields.io/badge/powered%20by-Claude-d97757">
+  <img alt="Jev by TypeSafe" src="https://img.shields.io/badge/labels-Jev%20%2B%20Claude-d97757">
 </p>
 
 <p align="center">
@@ -41,51 +41,67 @@ an AI agent grow the rest from the mail itself, so after a few runs your Gmail h
 - **Company-specific labels and sub-labels**, created by the agent as it meets new clients, vendors and projects
 - **A clean inbox**: low-value mail is labeled, archived and marked read; nothing is ever deleted
 - **"Needs you"**: emails where someone is blocked on you are starred and marked important
-- **Many mailboxes, one place**: personal Gmail and Google Workspace, connected in a click
+- **Many mailboxes, one place**: Gmail and Google Workspace accounts, connected with "Sign in with Google"
 - **Runs on a schedule** (default 07:00, 14:00, 19:00) with an optional Slack summary
-- **Self-hosted, single-tenant**: one small container per company, your Google project, your API key
+- **Fast and cheap**: Jev (TypeSafe) files the routine mail in milliseconds; Claude only sees what needs real judgment
+- **Self-hosted, single-tenant**: one small app per company, your Google project, your own API keys
 
 ## Quick start
 
-### Try it in 30 seconds (demo data, no accounts needed)
+### Install with one command
 
 ```bash
-git clone https://github.com/<you>/inbox-warden && cd inbox-warden
+curl -fsSL https://raw.githubusercontent.com/IshanVats-6/inbox-warden/main/install.sh | bash
+```
+
+The installer downloads Inbox Warden, asks for your keys, starts it and opens it in your browser:
+
+1. **Jev (TypeSafe) API key**: [console.typesafe.ai](https://console.typesafe.ai)
+2. **Claude (Anthropic) API key**: [console.anthropic.com](https://console.anthropic.com/settings/keys)
+3. **Google OAuth client ID and secret**: from your own Google Cloud project, five minutes once:
+   [docs/google-setup.md](docs/google-setup.md)
+
+It runs with Docker when Docker is available and falls back to Python 3.10+ otherwise (macOS and Linux).
+Run the same command again to update; your settings are kept.
+
+Then, in the app:
+
+1. **Mailboxes → Connect with Google**, once per Gmail or Workspace account.
+2. **Settings**: describe the company in two or three sentences.
+3. **Preview run**, check the decisions in **Activity**, then switch on **Live mode**.
+
+> Inbox Warden starts in **preview mode**: runs show exactly what would happen without touching Gmail.
+
+### Try it with demo data (no keys at all)
+
+```bash
+git clone https://github.com/IshanVats-6/inbox-warden && cd inbox-warden
 docker build -t inbox-warden . && docker run --rm -p 8080:8080 -e DEMO_MODE=true inbox-warden
 ```
 
-Open [localhost:8080](http://localhost:8080). You get a fictional studio with two mailboxes, already sorted.
+Open [localhost:8080](http://localhost:8080): a fictional studio with two mailboxes, already sorted.
 
 <details>
-<summary>Without Docker</summary>
+<summary>Manual setup on a server</summary>
 
 ```bash
-pip install -r requirements.txt
-DEMO_MODE=true uvicorn warden.app:app --port 8080
+git clone https://github.com/IshanVats-6/inbox-warden && cd inbox-warden
+cp .env.example .env    # fill in PUBLIC_URL, ADMIN_PASSWORD, SECRET_KEY, the AI keys and GOOGLE_CLIENT_*
+docker compose up -d
 ```
+
+Put it behind HTTPS (any reverse proxy) and register `https://<your-domain>/oauth/callback` as the redirect URI.
 </details>
-
-### Run it for real
-
-1. **Google:** create an OAuth client (and optionally domain-wide delegation) in your own Google Cloud project.
-   Step-by-step: [docs/google-setup.md](docs/google-setup.md).
-2. **Configure:**
-   ```bash
-   cp .env.example .env    # fill in PUBLIC_URL, ADMIN_PASSWORD, SECRET_KEY, ANTHROPIC_API_KEY, GOOGLE_CLIENT_*
-   docker compose up -d
-   ```
-3. **Connect mailboxes** on the Mailboxes page, describe the company in **Settings**, and click **Preview run**.
-4. Check the decisions in **Activity**. When they look right, switch on **Live mode**.
-
-> Inbox Warden starts in **preview mode**: runs show exactly what would happen without touching Gmail.
 
 ## How it works
 
 ```mermaid
 flowchart LR
     A["Gmail mailboxes"] -->|"unlabeled inbox mail<br>(sender, subject, snippet)"| B["Inbox Warden"]
-    B -->|"batch of 25 + company profile<br>+ current labels"| C["Claude"]
-    C -->|"label per email, new labels,<br>needs-attention flag"| B
+    B -->|"each email + company<br>+ current labels"| J["Jev<br>fast first pass"]
+    J -->|"confident: existing label,<br>needs-attention flag"| B
+    J -.->|"unsure, new client,<br>nothing fits"| C["Claude"]
+    C -->|"label or new label,<br>needs-attention flag"| B
     B -->|"guardrails: limits, dedupe,<br>naming, mailbox mode"| D{"Action"}
     D -->|"keep"| E["Inbox"]
     D -->|"archive"| F["Label + read"]
@@ -94,11 +110,15 @@ flowchart LR
 ```
 
 1. **Fetch.** Every run reads only inbox mail that has no label yet, metadata and a short snippet, never full bodies.
-2. **Classify.** Claude gets the company profile, the current label taxonomy and a batch of emails, and returns one
-   decision per email through structured output: an existing label or a proposed new one, plus a needs-attention flag.
-3. **Guard.** Code keeps the final say: at most two levels (`Group/Item`), tidy names, near-duplicates merged,
+2. **Jev first.** [Jev](https://typesafe.ai) by TypeSafe picks the best existing label for each email, with a
+   probability, and flags emails that need you. Confident, routine decisions (receipts, alerts, newsletters, promos)
+   are done here.
+3. **Claude for the rest.** Emails Jev is unsure about, real business contacts that would otherwise land in a bulk
+   label, and emails no label fits go to Claude in batches of 25. Claude can create new labels and sub-labels,
+   returned through structured output.
+4. **Guard.** Code keeps the final say: at most two levels (`Group/Item`), tidy names, near-duplicates merged,
    a cap on new labels per run, and each mailbox's mode respected.
-4. **Apply.** Labels are created in Gmail the first time they are used. The label's action decides what happens next.
+5. **Apply.** Labels are created in Gmail the first time they are used. The label's action decides what happens next.
 
 ## Labels that fit each company
 
@@ -161,11 +181,12 @@ so those tools see replies and bounces first.
 - **Nothing is deleted or sent.** The code has no delete, trash or send path; it only adds and removes labels.
   Archived mail is one click from the inbox.
 - **Preview mode first.** New installs only record what they would do until you switch on Live mode.
-- **Least data.** Claude sees sender, recipients, subject and a ~300 character snippet, never full bodies or attachments.
+- **Least data.** Jev and Claude see sender, recipients, subject and a ~300 character snippet, never full bodies
+  or attachments.
 - **Prompt-injection aware.** Email content is passed as data and the agent is told never to follow instructions in it.
   Its only power is choosing a label, and code validates every label it proposes.
-- **Your keys, your project.** OAuth refresh tokens are encrypted at rest with your `SECRET_KEY`;
-  Google access goes through your own Google Cloud project.
+- **Your keys, your project.** Google access goes through your own Google Cloud project, AI calls through your own
+  TypeSafe and Anthropic keys, and OAuth refresh tokens are encrypted at rest with your `SECRET_KEY`.
 
 ## Configuration
 
@@ -176,11 +197,13 @@ All settings are environment variables (see [.env.example](.env.example)).
 | `PUBLIC_URL` | `http://localhost:8080` | Where the app is reachable; used for Google sign-in |
 | `ADMIN_PASSWORD` | | Password for the web app |
 | `SECRET_KEY` | | Signs sessions and encrypts stored tokens |
-| `ANTHROPIC_API_KEY` | | Claude API key |
+| `PORT` | `8080` | Port on the host (docker compose) |
+| `TYPESAFE_API_KEY` | | Jev key for the fast first pass |
+| `JEV_MIN_CONFIDENCE` | `0.6` | Jev decisions below this go to Claude |
+| `ANTHROPIC_API_KEY` | | Claude key for unsure emails and new labels |
 | `ANTHROPIC_MODEL` | `claude-opus-5-5` | Any current Claude model; `claude-haiku-5-5` costs far less per email |
 | `ANTHROPIC_EFFORT` | `low` | Reasoning effort for classification |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | | OAuth client for "Connect with Google" |
-| `GOOGLE_SERVICE_ACCOUNT_FILE` | | Optional Workspace domain-wide delegation key |
 | `SCHEDULE` | `0 7,14,19 * * *` | Cron schedule |
 | `TZ` | `UTC` | Timezone for the schedule |
 | `MAX_EMAILS_PER_RUN` | `500` | Upper bound per run |
@@ -190,8 +213,9 @@ All settings are environment variables (see [.env.example](.env.example)).
 
 ## Running it for clients
 
-Inbox Warden is single-tenant on purpose: deploy **one instance per company**. Each instance has its own Google
-project (or OAuth client), its own label taxonomy and its own company profile, so labels and data never mix.
+Inbox Warden is single-tenant on purpose: **one instance per company**, installed with the one command above.
+Each instance has its own Google OAuth client, its own AI keys, its own label taxonomy and its own company profile,
+so labels and data never mix.
 A small VPS or any container host (Coolify, Railway, Render, Fly.io) runs it comfortably; data lives in one SQLite
 file in the `/data` volume.
 
@@ -201,7 +225,7 @@ file in the `/data` volume.
 warden/
   app.py          web app, Google sign-in, scheduler
   agent.py        one cleanup run: fetch, classify, guardrails, apply
-  classifier.py   Claude structured-output classifier (+ demo classifier)
+  classifier.py   Jev first pass, Claude structured-output classifier, demo classifier
   taxonomy.py     core labels, label rules, dedupe
   gmail.py        Gmail API and demo backends
   db.py           SQLite storage
@@ -212,6 +236,7 @@ warden/
 
 - Outlook / Microsoft 365 mailboxes
 - Learn from manual corrections (moving an email to another label teaches the agent)
+- Domain-wide delegation for Workspace admins adding many mailboxes at once
 - MCP server so assistants like Claude can search and act across all connected mailboxes
 - Per-label rules ("always archive mail from this sender")
 

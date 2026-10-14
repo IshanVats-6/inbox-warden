@@ -12,7 +12,7 @@ from .config import settings
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS mailboxes (
     email TEXT PRIMARY KEY,
-    auth TEXT NOT NULL,                 -- 'oauth' | 'service_account' | 'demo'
+    auth TEXT NOT NULL,                 -- 'oauth' | 'demo'
     refresh_token TEXT,                 -- encrypted, oauth only
     mode TEXT NOT NULL DEFAULT 'clean', -- 'clean' | 'label_only' | 'paused'
     min_age_hours INTEGER NOT NULL DEFAULT 0,

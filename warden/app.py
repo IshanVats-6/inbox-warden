@@ -149,8 +149,7 @@ def mailboxes(request: Request, error: str = ""):
             b["ok"] = True
         except Exception as ex:
             b["ok"], b["error"] = False, str(ex)[:120]
-    return page(request, "mailboxes.html", boxes=boxes, error=error,
-                can_oauth=bool(settings.google_client_id), can_dwd=bool(settings.google_service_account_file))
+    return page(request, "mailboxes.html", boxes=boxes, error=error, can_oauth=bool(settings.google_client_id))
 
 
 @app.post("/mailboxes/{email}")
@@ -164,20 +163,6 @@ def update_mailbox(request: Request, email: str, mode: str = Form(...), min_age_
 def remove_mailbox(request: Request, email: str):
     if authed(request):
         db.execute("DELETE FROM mailboxes WHERE email=?", email)
-    return RedirectResponse("/mailboxes", status_code=303)
-
-
-@app.post("/mailboxes-workspace")
-def add_workspace_mailbox(request: Request, email: str = Form(...)):
-    if not authed(request):
-        return RedirectResponse("/login", status_code=303)
-    email = email.strip().lower()
-    db.execute("INSERT OR REPLACE INTO mailboxes(email, auth, added_at) VALUES(?, 'service_account', ?)", email, db.now())
-    try:
-        backend().profile(email)
-    except Exception as ex:
-        db.execute("DELETE FROM mailboxes WHERE email=?", email)
-        return RedirectResponse(f"/mailboxes?{urlencode({'error': f'{email}: {str(ex)[:150]}'})}", status_code=303)
     return RedirectResponse("/mailboxes", status_code=303)
 
 

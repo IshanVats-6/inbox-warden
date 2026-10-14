@@ -16,7 +16,8 @@
     <table>
       <tr><td class="muted">Schedule</td><td><code>{{ s.schedule }}</code> ({{ s.timezone }})</td></tr>
       <tr><td class="muted">Next run</td><td>{{ next_run }}</td></tr>
-      <tr><td class="muted">Model</td><td><code>{{ s.anthropic_model }}</code>, effort {{ s.anthropic_effort }}</td></tr>
+      <tr><td class="muted">First pass</td><td>{% if s.typesafe_api_key or demo %}Jev (TypeSafe), into existing labels{% else %}<span class="muted">Jev off (no TYPESAFE_API_KEY)</span>{% endif %}</td></tr>
+      <tr><td class="muted">New labels</td><td><code>{{ s.anthropic_model }}</code>, effort {{ s.anthropic_effort }}</td></tr>
       <tr><td class="muted">Per run</td><td>up to {{ s.max_emails_per_run }} emails, {{ s.max_new_labels_per_run }} new labels</td></tr>
       <tr><td class="muted">Slack summary</td><td>{{ 'On' if s.slack_webhook_url else 'Off' }}</td></tr>
     </table>

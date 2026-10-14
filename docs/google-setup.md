@@ -1,42 +1,36 @@
 # Google setup
 
-Inbox Warden talks to Gmail through your own Google Cloud project, so no third party ever holds access to your mail.
-Pick one (or both) of the two ways to connect mailboxes.
+Inbox Warden connects to Gmail with **Sign in with Google**, through an OAuth client in **your own** Google Cloud
+project, so no third party ever holds access to your mail. It takes about five minutes, once.
 
-| | Sign in with Google (OAuth) | Domain-wide delegation |
-|---|---|---|
-| Works for | Any Gmail or Google Workspace account | Google Workspace, when you are the admin |
-| Adding a mailbox | The owner clicks **Connect with Google** | Type the address, nobody signs in |
-| Best for | A handful of mailboxes | Many mailboxes in one company |
+## 1. Create a project and enable Gmail
 
-## 1. Create the project and enable Gmail
+1. Open [console.cloud.google.com](https://console.cloud.google.com) and create a project, e.g. "Inbox Warden".
+2. **APIs & Services → Library** → search **Gmail API** → **Enable**.
 
-1. Open [console.cloud.google.com](https://console.cloud.google.com) and create a project (e.g. "Inbox Warden").
-2. **APIs & Services → Library** → enable the **Gmail API**.
+## 2. Consent screen
 
-## 2. OAuth client (Sign in with Google)
+1. **APIs & Services → OAuth consent screen** (called **Google Auth Platform** in newer consoles).
+2. User type: **External** (or **Internal** if every mailbox is in your Google Workspace).
+3. App name "Inbox Warden", your email as support and developer contact.
+4. **Data access / Scopes** → add `https://www.googleapis.com/auth/gmail.modify`.
+5. **Audience**: click **Publish app**. Apps left in "Testing" have their sign-ins expire after 7 days.
+   You don't need Google's verification for your own mailboxes; at sign-in, click **Advanced → Continue**.
 
-1. **APIs & Services → OAuth consent screen**: user type **External** (or Internal on Workspace), add the scope
-   `https://www.googleapis.com/auth/gmail.modify`.
-2. Click **Publish app**. While an app is in "Testing", Google expires sign-ins after 7 days.
-   An unverified app works for your own accounts; users see a warning and click **Advanced → Continue**.
-3. **Credentials → Create credentials → OAuth client ID** → type **Web application**.
-4. Authorized redirect URI: `<PUBLIC_URL>/oauth/callback`, e.g. `https://mail.example.com/oauth/callback`.
-5. Put the client ID and secret in `.env` as `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+## 3. OAuth client
 
-## 3. Domain-wide delegation (optional, Workspace admins)
+1. **Credentials → Create credentials → OAuth client ID** → application type **Web application**.
+2. **Authorized redirect URIs** → add your app URL followed by `/oauth/callback`:
+   - installed with the installer: `http://localhost:8080/oauth/callback` (the installer prints the exact one)
+   - on a server: `https://mail.example.com/oauth/callback`
+3. Copy the **Client ID** and **Client secret** into the installer (or `.env` as `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`).
 
-1. **IAM & Admin → Service accounts → Create** → open it → **Keys → Add key → JSON**.
-   If key creation is blocked, an organization policy (`iam.disableServiceAccountKeyCreation`) is on;
-   an Organization Policy Administrator can override it for this project only.
-2. Copy the service account's numeric **Client ID**.
-3. In [admin.google.com](https://admin.google.com) → **Security → Access and data control → API controls →
-   Domain-wide delegation → Add new**: paste the Client ID, scope `https://www.googleapis.com/auth/gmail.modify`.
-   Repeat in every Workspace organization whose mailboxes you want to add.
-4. Mount the JSON key into the container and set `GOOGLE_SERVICE_ACCOUNT_FILE` (e.g. `/data/service-account.json`).
-5. Add mailboxes by address on the **Mailboxes** page.
+## 4. Connect mailboxes
+
+In Inbox Warden open **Mailboxes → Connect with Google** and sign in with each Gmail or Workspace account.
 
 ## What access is used
 
-Only the `gmail.modify` scope: read message metadata, create labels, add/remove labels (which is how archiving and
-read/unread work). Inbox Warden has no code path that deletes, trashes or sends email.
+Only `gmail.modify`: read message headers and snippets, create labels, and add or remove labels (which is how
+archiving and read/unread work). Inbox Warden has no code path that deletes, trashes or sends email.
+Refresh tokens are encrypted at rest with your `SECRET_KEY`.

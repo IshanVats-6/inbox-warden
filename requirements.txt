@@ -9,3 +9,4 @@ requests>=2.34
 cryptography>=50
 croniter>=6.2
 pydantic>=2.14
+typesafe-sdk>=0.7.4

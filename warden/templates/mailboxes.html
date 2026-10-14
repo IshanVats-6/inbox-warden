@@ -5,14 +5,14 @@
 <div class="panel">
   <h2>Connected mailboxes
     <span class="inline">
-      {% if can_oauth %}<a class="btn" href="/connect/google">+ Connect with Google</a>{% endif %}
+      {% if can_oauth %}<a class="btn" href="/connect/google">+ Connect with Google</a>{% elif not demo %}<span class="small muted">Set GOOGLE_CLIENT_ID to connect mailboxes</span>{% endif %}
     </span>
   </h2>
   <table>
     <tr><th>Mailbox</th><th>Status</th><th>Mode</th><th>Only touch mail older than</th><th></th></tr>
     {% for b in boxes %}
     <tr>
-      <td><b>{{ b.email }}</b><div class="small muted">{{ {'oauth': 'Google sign-in', 'service_account': 'Workspace delegation', 'demo': 'Demo mailbox'}[b.auth] }}</div></td>
+      <td><b>{{ b.email }}</b><div class="small muted">{{ 'Demo mailbox' if b.auth == 'demo' else 'Google sign-in' }}</div></td>
       <td>{% if b.ok %}<span class="pill ok">Connected</span><div class="small muted">{{ b.total }} messages</div>
           {% else %}<span class="pill red">Error</span><div class="small muted">{{ b.error }}</div>{% endif %}</td>
       <td colspan="2">
@@ -39,13 +39,10 @@
     <p><b>Label only</b> files mail under labels but never archives or marks it read. Use it for shared or sending mailboxes.</p>
     <p style="margin:0"><b>Older than</b> leaves recent mail alone, e.g. 72 hours for mailboxes used by outreach tools.</p>
   </div></div>
-  {% if can_dwd %}
-  <div class="panel"><h2>Add a Workspace mailbox</h2><div class="body">
-    <form method="post" action="/mailboxes-workspace" class="inline" style="width:100%">
-      <input type="email" name="email" placeholder="name@company.com" required><button class="btn">Add</button>
-    </form>
-    <p class="small muted" style="margin-bottom:0">Uses your service account with domain-wide delegation, so nobody has to sign in.</p>
+  <div class="panel"><h2>Connecting a mailbox</h2><div class="body small">
+    <p>Click <b>Connect with Google</b> and sign in with the Gmail or Workspace account you want to add. Repeat for every mailbox.</p>
+    <p>Access uses only the <code>gmail.modify</code> scope: read headers, create labels, archive and mark read. Nothing can be deleted or sent.</p>
+    <p style="margin:0">Google may warn that the app is unverified, because it is your own app. Click <b>Advanced</b>, then <b>Continue</b>.</p>
   </div></div>
-  {% endif %}
 </div>
 {% endblock %}

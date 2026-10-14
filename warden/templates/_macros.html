@@ -1,0 +1,13 @@
+{% macro label(path, new=False) -%}
+<span class="label{{ ' new' if new }}" style="--dot: {{ path | dot }}">{{ path }}</span>
+{%- endmacro %}
+
+{% macro action(a) -%}
+{% if a == 'attention' %}<span class="pill red">Needs you</span>
+{% elif a == 'keep' %}<span class="pill blue">Kept in inbox</span>
+{% elif a == 'archive' %}<span class="pill grey">Archived</span>
+{% elif a == 'archive_unread' %}<span class="pill grey">Archived, unread</span>
+{% else %}<span class="pill grey">Labeled</span>{% endif %}
+{%- endmacro %}
+
+{% macro sender(s) -%}{{ s.split('<')[0].strip().strip('"') or s }}{%- endmacro %}

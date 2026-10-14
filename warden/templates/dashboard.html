@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_macros.html" import label, action, sender %}
+{% block heading %}Dashboard{% endblock %}
+{% block body %}
+{% if not mailboxes %}
+<div class="notice">No mailboxes yet. <a href="/mailboxes">Connect your first mailbox</a>, describe your company in <a href="/settings">Settings</a>, then run a preview.</div>
+{% endif %}
+<div class="cards">
+  <div class="card"><div class="k">Emails sorted</div><div class="v">{{ totals.n or 0 }}</div><div class="s">across {{ mailboxes }} mailbox{{ 'es' if mailboxes != 1 }}</div></div>
+  <div class="card"><div class="k">Archived</div><div class="v">{{ totals.archived or 0 }}</div><div class="s">out of the inbox, nothing deleted</div></div>
+  <div class="card"><div class="k">Labels</div><div class="v">{{ labels.n }}</div><div class="s">{{ labels.agent or 0 }} created by the agent</div></div>
+  <div class="card"><div class="k">Next run</div><div class="v" style="font-size:18px;margin-top:9px">{{ next_run }}</div><div class="s">{% if last %}last: {{ last.started_at | when }} · {{ last.status }}{% else %}never run{% endif %}</div></div>
+</div>
+<div class="grid2">
+  <div class="panel">
+    <h2>Needs you <span class="pill red">{{ attention | length }}</span></h2>
+    {% for d in attention %}
+    <div class="item"><div class="grow"><div class="subj">{{ d.subject or "(no subject)" }}</div>
+      <div class="from">{{ sender(d.sender) }} · {{ d.mailbox }}</div></div>{{ label(d.label) }}</div>
+    {% else %}<div class="empty">Nothing is waiting on you.</div>{% endfor %}
+  </div>
+  <div class="panel">
+    <h2>Latest decisions <a class="small" href="/activity">View all</a></h2>
+    {% for d in recent %}
+    <div class="item"><div class="grow"><div class="subj">{{ d.subject or "(no subject)" }}</div>
+      <div class="from">{{ sender(d.sender) }}</div></div>
+      <div style="text-align:right">{{ label(d.label, d.new_label) }}<div style="margin-top:4px">{{ action(d.action) }}</div></div></div>
+    {% else %}<div class="empty">No runs yet.</div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

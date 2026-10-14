@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block heading %}Settings{% endblock %}
+{% block body %}
+{% if saved %}<div class="notice">Saved.</div>{% endif %}
+<div class="grid2">
+  <form class="panel" method="post" action="/settings"><h2>Company profile</h2><div class="body">
+    <div class="field"><label>Company name</label><input type="text" name="name" value="{{ company.name }}"></div>
+    <div class="field"><label>What the company does</label>
+      <textarea name="description" placeholder="What you sell, who your clients are, main vendors and partners, anything that helps sort your email.">{{ company.description }}</textarea>
+      <div class="hint">The agent uses this to name labels the way your team would.</div></div>
+    <div class="field"><label class="inline" style="font-weight:600"><input type="checkbox" name="live" {{ '' if dry_run else 'checked' }}> Live mode</label>
+      <div class="hint">Off = preview runs only: decisions are shown in Activity but Gmail is not changed. Turn on once the previews look right.</div></div>
+    <button class="btn">Save</button>
+  </div></form>
+  <div class="panel"><h2>Schedule and engine</h2>
+    <table>
+      <tr><td class="muted">Schedule</td><td><code>{{ s.schedule }}</code> ({{ s.timezone }})</td></tr>
+      <tr><td class="muted">Next run</td><td>{{ next_run }}</td></tr>
+      <tr><td class="muted">Model</td><td><code>{{ s.anthropic_model }}</code>, effort {{ s.anthropic_effort }}</td></tr>
+      <tr><td class="muted">Per run</td><td>up to {{ s.max_emails_per_run }} emails, {{ s.max_new_labels_per_run }} new labels</td></tr>
+      <tr><td class="muted">Slack summary</td><td>{{ 'On' if s.slack_webhook_url else 'Off' }}</td></tr>
+    </table>
+    <div class="body small muted">Change these with environment variables (see <code>.env.example</code>) and restart.</div>
+  </div>
+</div>
+{% endblock %}

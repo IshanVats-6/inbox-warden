@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Inbox Warden{% endblock %}</title>
+  <link rel="icon" href="/static/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <a class="brand" href="/"><img src="/static/logo.svg" alt=""><span>Inbox Warden</span></a>
+    <nav>
+      <a href="/" class="{{ 'on' if active == 'dashboard' }}">{% include "icons/home.svg" %}Dashboard</a>
+      <a href="/mailboxes" class="{{ 'on' if active == 'mailboxes' }}">{% include "icons/inbox.svg" %}Mailboxes</a>
+      <a href="/labels" class="{{ 'on' if active == 'labels' }}">{% include "icons/tag.svg" %}Labels</a>
+      <a href="/activity" class="{{ 'on' if active == 'activity' }}">{% include "icons/pulse.svg" %}Activity</a>
+      <a href="/settings" class="{{ 'on' if active == 'settings' }}">{% include "icons/gear.svg" %}Settings</a>
+    </nav>
+    <div class="side-foot">
+      <div class="company">{{ company.name or "Your company" }}</div>
+      {% if not demo %}<a href="/logout">Log out</a>{% else %}<span class="pill demo">Demo data</span>{% endif %}
+    </div>
+  </aside>
+  <main>
+    <header class="top">
+      <h1>{% block heading %}{% endblock %}</h1>
+      <div class="top-actions">
+        {% if dry_run %}<span class="pill warn" title="Runs show what would happen without changing Gmail">Preview mode</span>
+        {% else %}<span class="pill ok">Live</span>{% endif %}
+        <form method="post" action="/run"><input type="hidden" name="preview" value="1"><button class="btn ghost">Preview run</button></form>
+        <form method="post" action="/run"><button class="btn">Run now</button></form>
+      </div>
+    </header>
+    {% block body %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

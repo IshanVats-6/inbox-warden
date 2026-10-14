@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block heading %}Mailboxes{% endblock %}
+{% block body %}
+{% if error %}<div class="notice red">{{ error }}</div>{% endif %}
+<div class="panel">
+  <h2>Connected mailboxes
+    <span class="inline">
+      {% if can_oauth %}<a class="btn" href="/connect/google">+ Connect with Google</a>{% endif %}
+    </span>
+  </h2>
+  <table>
+    <tr><th>Mailbox</th><th>Status</th><th>Mode</th><th>Only touch mail older than</th><th></th></tr>
+    {% for b in boxes %}
+    <tr>
+      <td><b>{{ b.email }}</b><div class="small muted">{{ {'oauth': 'Google sign-in', 'service_account': 'Workspace delegation', 'demo': 'Demo mailbox'}[b.auth] }}</div></td>
+      <td>{% if b.ok %}<span class="pill ok">Connected</span><div class="small muted">{{ b.total }} messages</div>
+          {% else %}<span class="pill red">Error</span><div class="small muted">{{ b.error }}</div>{% endif %}</td>
+      <td colspan="2">
+        <form class="inline" method="post" action="/mailboxes/{{ b.email }}">
+          <select name="mode">
+            <option value="clean" {{ 'selected' if b.mode == 'clean' }}>Clean: label + archive</option>
+            <option value="label_only" {{ 'selected' if b.mode == 'label_only' }}>Label only</option>
+            <option value="paused" {{ 'selected' if b.mode == 'paused' }}>Paused</option>
+          </select>
+          <input type="number" name="min_age_hours" value="{{ b.min_age_hours }}" min="0" style="width:80px"> hours
+          <button class="btn ghost">Save</button>
+        </form>
+      </td>
+      <td><form method="post" action="/mailboxes/{{ b.email }}/remove" onsubmit="return confirm('Disconnect {{ b.email }}? Gmail is not changed.')"><button class="btn danger">Remove</button></form></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="empty">No mailboxes connected yet.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+<div class="grid2">
+  <div class="panel"><h2>Modes</h2><div class="body small">
+    <p><b>Clean</b> labels every email and archives what doesn't need attention.</p>
+    <p><b>Label only</b> files mail under labels but never archives or marks it read. Use it for shared or sending mailboxes.</p>
+    <p style="margin:0"><b>Older than</b> leaves recent mail alone, e.g. 72 hours for mailboxes used by outreach tools.</p>
+  </div></div>
+  {% if can_dwd %}
+  <div class="panel"><h2>Add a Workspace mailbox</h2><div class="body">
+    <form method="post" action="/mailboxes-workspace" class="inline" style="width:100%">
+      <input type="email" name="email" placeholder="name@company.com" required><button class="btn">Add</button>
+    </form>
+    <p class="small muted" style="margin-bottom:0">Uses your service account with domain-wide delegation, so nobody has to sign in.</p>
+  </div></div>
+  {% endif %}
+</div>
+{% endblock %}

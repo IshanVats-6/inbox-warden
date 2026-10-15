@@ -1,11 +1,11 @@
 services:
-  warden:
+  mailhub:
     build: .
     restart: unless-stopped
     env_file: .env
     ports:
       - "127.0.0.1:${PORT:-8080}:8080"
     volumes:
-      - warden-data:/data
+      - mailhub-data:/data
 volumes:
-  warden-data:
+  mailhub-data:

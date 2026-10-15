@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}{{ self.heading() }} · Inbox Warden{% endblock %}</title>
+  <title>{% block title %}{{ self.heading() }} · Mailhub{% endblock %}</title>
   <link rel="icon" href="/static/logo.svg?v=3">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -20,7 +20,7 @@
 {%- endmacro %}
 <div class="shell">
   <aside class="side" aria-label="Sidebar">
-    <a class="ws" href="/"><img src="/static/logo.svg?v=3" alt=""><span><b>{{ company.name or "Your company" }}</b><small>Inbox Warden</small></span></a>
+    <a class="ws" href="/"><img src="/static/logo.svg?v=3" alt=""><span><b>{{ company.name or "Your company" }}</b><small>Mailhub</small></span></a>
     <nav class="nav" aria-label="Main">
       {% set items = [('dashboard', '/', 'home', 'Dashboard'), ('activity', '/activity', 'pulse', 'Activity'), ('labels', '/labels', 'tag', 'Labels'),
                       ('mailboxes', '/mailboxes', 'inbox', 'Mailboxes'), ('settings', '/settings', 'gear', 'Settings')] %}
@@ -52,7 +52,7 @@
   </aside>
   <main>
     <header class="top">
-      <div class="crumbs"><span class="co">{{ company.name or "Inbox Warden" }}</span><span class="co" aria-hidden="true">/</span><b>{% block heading %}{% endblock %}</b></div>
+      <div class="crumbs"><span class="co">{{ company.name or "Mailhub" }}</span><span class="co" aria-hidden="true">/</span><b>{% block heading %}{% endblock %}</b></div>
       <div class="top-actions">
         <form method="post" action="/run"><input type="hidden" name="preview" value="1"><button class="btn secondary" title="See what a run would do, without changing Gmail">{% include "icons/eye.svg" %}<span class="lbl-t">Preview run</span></button></form>
         <form method="post" action="/run"><button class="btn dark">{% include "icons/play.svg" %}<span class="lbl-t">Run now</span></button></form>

@@ -59,7 +59,11 @@ _lock = threading.Lock()
 
 def _path():
     os.makedirs(settings.data_dir, exist_ok=True)
-    return os.path.join(settings.data_dir, "warden.db")
+    path = os.path.join(settings.data_dir, "mailhub.db")
+    legacy = os.path.join(settings.data_dir, "warden.db")  # installs from before the rename keep their data
+    if not os.path.exists(path) and os.path.exists(legacy):
+        os.rename(legacy, path)
+    return path
 
 
 @contextmanager

@@ -1,4 +1,4 @@
-/* Inbox Warden UI. Every value here comes from DESIGN.md (Notion system); read it before changing anything. */
+/* Mailhub UI. Every value here comes from DESIGN.md (Notion system); read it before changing anything. */
 :root {
   /* colors.* */
   --canvas: #ffffff; --surface: #f6f5f4; --surface-soft: #fafaf9;

@@ -134,7 +134,7 @@ def notify(run_id):
     run = db.rows("SELECT * FROM runs WHERE id=?", run_id)[0]
     stats = json.loads(run["stats"])
     urgent = db.rows("SELECT * FROM decisions WHERE run_id=? AND action='attention'", run_id)
-    lines = [f"*Inbox Warden* {'(preview) ' if run['dry_run'] else ''}sorted {stats.get('sorted', 0)} emails, "
+    lines = [f"*Mailhub* {'(preview) ' if run['dry_run'] else ''}sorted {stats.get('sorted', 0)} emails, "
              f"archived {stats.get('archive', 0) + stats.get('archive_unread', 0)}, "
              f"created {stats.get('labels_created', 0)} labels."]
     if run["status"] == "failed":

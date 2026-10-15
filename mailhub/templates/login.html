@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign in · Inbox Warden</title>
+  <title>Sign in · Mailhub</title>
   <link rel="icon" href="/static/logo.svg?v=3">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
 <main class="login">
   <form class="card" method="post" action="/login">
     <img src="/static/logo.svg?v=3" alt="">
-    <h1>Sign in to Inbox Warden</h1>
+    <h1>Sign in to Mailhub</h1>
     <p>Manage your mailboxes, labels and runs.</p>
     {% if error %}<div class="notice error" role="alert">That password didn't match. Try again.</div>{% endif %}
     <div class="field"><label class="lbl" for="p">Password</label><input id="p" type="password" name="password" autocomplete="current-password" autofocus required></div>

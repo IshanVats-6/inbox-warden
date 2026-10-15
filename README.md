@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/banner.svg" alt="Inbox Warden" width="100%">
+  <img src="docs/banner.svg" alt="Mailhub" width="100%">
 </p>
 
 <p align="center">
@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <b>Connect your mailboxes. Describe your company. Inbox Warden sorts every email into labels that fit your business,<br>
+  <b>Connect your mailboxes. Describe your company. Mailhub sorts every email into labels that fit your business,<br>
   archives the noise, and flags the few emails that are waiting on you.</b>
 </p>
 
@@ -28,13 +28,13 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/dashboard-dark.png">
-  <img alt="Inbox Warden dashboard" src="docs/screenshots/dashboard.png">
+  <img alt="Mailhub dashboard" src="docs/screenshots/dashboard.png">
 </picture>
 
 ## Why
 
 Most inbox tools sort mail into the same generic buckets for everyone. A design studio, a law firm and a SaaS startup
-need different folders: their clients, their vendors, their deals. Inbox Warden starts with four core labels and lets
+need different folders: their clients, their vendors, their deals. Mailhub starts with four core labels and lets
 an AI agent grow the rest from the mail itself, so after a few runs your Gmail has `Clients/Acme Corp`,
 `Vendors/AWS`, `Partners/Webflow` and whatever else your business actually runs on.
 
@@ -51,10 +51,10 @@ an AI agent grow the rest from the mail itself, so after a few runs your Gmail h
 ### Install with one command
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/IshanVats-6/inbox-warden/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/IshanVats-6/mailhub/main/install.sh | bash
 ```
 
-The installer downloads Inbox Warden, asks for your keys, starts it and opens it in your browser:
+The installer downloads Mailhub, asks for your keys, starts it and opens it in your browser:
 
 1. **Jev (TypeSafe) API key**: [console.typesafe.ai](https://console.typesafe.ai)
 2. **Claude (Anthropic) API key**: [console.anthropic.com](https://console.anthropic.com/settings/keys)
@@ -70,13 +70,13 @@ Then, in the app:
 2. **Settings**: describe the company in two or three sentences.
 3. **Preview run**, check the decisions in **Activity**, then switch on **Live mode**.
 
-> Inbox Warden starts in **preview mode**: runs show exactly what would happen without touching Gmail.
+> Mailhub starts in **preview mode**: runs show exactly what would happen without touching Gmail.
 
 ### Try it with demo data (no keys at all)
 
 ```bash
-git clone https://github.com/IshanVats-6/inbox-warden && cd inbox-warden
-docker build -t inbox-warden . && docker run --rm -p 8080:8080 -e DEMO_MODE=true inbox-warden
+git clone https://github.com/IshanVats-6/mailhub && cd mailhub
+docker build -t mailhub . && docker run --rm -p 8080:8080 -e DEMO_MODE=true mailhub
 ```
 
 Open [localhost:8080](http://localhost:8080): a fictional studio with two mailboxes, already sorted.
@@ -85,7 +85,7 @@ Open [localhost:8080](http://localhost:8080): a fictional studio with two mailbo
 <summary>Manual setup on a server</summary>
 
 ```bash
-git clone https://github.com/IshanVats-6/inbox-warden && cd inbox-warden
+git clone https://github.com/IshanVats-6/mailhub && cd mailhub
 cp .env.example .env    # fill in PUBLIC_URL, ADMIN_PASSWORD, SECRET_KEY, the AI keys and GOOGLE_CLIENT_*
 docker compose up -d
 ```
@@ -97,7 +97,7 @@ Put it behind HTTPS (any reverse proxy) and register `https://<your-domain>/oaut
 
 ```mermaid
 flowchart LR
-    A["Gmail mailboxes"] -->|"unlabeled inbox mail<br>(sender, subject, snippet)"| B["Inbox Warden"]
+    A["Gmail mailboxes"] -->|"unlabeled inbox mail<br>(sender, subject, snippet)"| B["Mailhub"]
     B -->|"each email + company<br>+ current labels"| J["Jev<br>fast first pass"]
     J -->|"confident: existing label,<br>needs-attention flag"| B
     J -.->|"unsure, new client,<br>nothing fits"| C["Claude"]
@@ -213,7 +213,7 @@ All settings are environment variables (see [.env.example](.env.example)).
 
 ## Running it for clients
 
-Inbox Warden is single-tenant on purpose: **one instance per company**, installed with the one command above.
+Mailhub is single-tenant on purpose: **one instance per company**, installed with the one command above.
 Each instance has its own Google OAuth client, its own AI keys, its own label taxonomy and its own company profile,
 so labels and data never mix.
 A small VPS or any container host (Coolify, Railway, Render, Fly.io) runs it comfortably; data lives in one SQLite
@@ -222,7 +222,7 @@ file in the `/data` volume.
 ## Project layout
 
 ```
-warden/
+mailhub/
   app.py          web app, Google sign-in, scheduler
   agent.py        one cleanup run: fetch, classify, guardrails, apply
   classifier.py   Jev first pass, Claude structured-output classifier, demo classifier
